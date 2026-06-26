@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ДомПро — Мой проект</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="logo">🏠 ДомПро</div>
+    <nav class="nav">
+      <a href="#" class="active">Мой проект</a>
+      <a href="#">Этапы</a>
+      <a href="#">Бюджет</a>
+      <a href="#">Документы</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Мой дом — мой проект</h1>
+      <p>Отслеживайте строительство, этапы и расходы в одном месте.</p>
+      <button class="btn btn-primary" id="addStageBtn">+ Добавить этап</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card">
+        <span class="stat-label">Прогресс</span>
+        <span class="stat-value" id="progressValue">35%</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Этапов</span>
+        <span class="stat-value" id="stagesCount">4</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Бюджет</span>
+        <span class="stat-value">2.4 млн ₽</span>
+      </div>
+    </section>
+
+    <section class="stages">
+      <h2>Этапы строительства</h2>
+      <ul class="stage-list" id="stageList">
+        <li class="stage-item done">
+          <span class="stage-name">Фундамент</span>
+          <span class="stage-status">Готово</span>
+        </li>
+        <li class="stage-item done">
+          <span class="stage-name">Стены</span>
+          <span class="stage-status">Готово</span>
+        </li>
+        <li class="stage-item active">
+          <span class="stage-name">Крыша</span>
+          <span class="stage-status">В работе</span>
+        </li>
+        <li class="stage-item">
+          <span class="stage-name">Отделка</span>
+          <span class="stage-status">Ожидает</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>ДомПро — локальный прототип © 2026</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
