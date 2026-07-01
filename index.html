@@ -3,67 +3,182 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ДомПро — Мой проект</title>
+  <meta name="description" content="DomPro — премиальный маркетплейс экспертов. Найдите проверенных специалистов или масштабируйте свою практику." />
+  <title>DomPro — Маркетплейс экспертов</title>
+  <link rel="icon" href="assets/logo.png" type="image/png" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header class="header">
-    <div class="logo">🏠 ДомПро</div>
-    <nav class="nav">
-      <a href="#" class="active">Мой проект</a>
-      <a href="#">Этапы</a>
-      <a href="#">Бюджет</a>
-      <a href="#">Документы</a>
-    </nav>
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <img src="assets/logo.png" alt="DomPro" class="logo-img" />
+        <span class="logo-text">DomPro</span>
+      </a>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Открыть меню" aria-expanded="false">
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="nav" id="mainNav">
+        <a href="#categories">Категории</a>
+        <a href="#how">Как это работает</a>
+        <a href="#experts">Экспертам</a>
+        <a href="#clients">Клиентам</a>
+      </nav>
+
+      <div class="header-actions">
+        <a href="#" class="btn btn-ghost">Войти</a>
+        <a href="#" class="btn btn-outline">Стать экспертом</a>
+      </div>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <h1>Мой дом — мой проект</h1>
-      <p>Отслеживайте строительство, этапы и расходы в одном месте.</p>
-      <button class="btn btn-primary" id="addStageBtn">+ Добавить этап</button>
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+
+      <div class="hero-inner">
+        <p class="hero-eyebrow">Вертикальный маркетплейс интеллектуальных услуг</p>
+
+        <h1 class="hero-title">
+          Эксперты премиум-класса.<br />
+          <span class="hero-title-accent">Одна платформа — полное доверие.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          DomPro объединяет юристов, бухгалтеров, маркетологов, дизайнеров и других
+          профессионалов с клиентами, которым нужны проверенные специалисты.
+          Безопасные сделки, прозрачные рейтинги, элитный уровень сервиса.
+        </p>
+
+        <form class="hero-search" id="heroSearch">
+          <label class="sr-only" for="searchInput">Поиск эксперта или услуги</label>
+          <input
+            type="search"
+            id="searchInput"
+            placeholder="Например: налоговый консультант, брендинг, договор аренды..."
+            autocomplete="off"
+          />
+          <button type="submit" class="btn btn-primary">Найти эксперта</button>
+        </form>
+
+        <div class="hero-tags" id="categoryTags">
+          <button type="button" class="tag" data-query="юрист">Юристы</button>
+          <button type="button" class="tag" data-query="бухгалтер">Бухгалтеры</button>
+          <button type="button" class="tag" data-query="маркетолог">Маркетологи</button>
+          <button type="button" class="tag" data-query="дизайнер">Дизайнеры</button>
+          <button type="button" class="tag" data-query="консультант">Консультанты</button>
+        </div>
+
+        <div class="hero-cta">
+          <a href="#" class="btn btn-primary btn-lg">Найти специалиста</a>
+          <a href="#" class="btn btn-outline btn-lg">Разместить услуги</a>
+        </div>
+
+        <ul class="hero-stats">
+          <li>
+            <strong>1 200+</strong>
+            <span>верифицированных экспертов</span>
+          </li>
+          <li>
+            <strong>4.9</strong>
+            <span>средний рейтинг платформы</span>
+          </li>
+          <li>
+            <strong>98%</strong>
+            <span>сделок без споров</span>
+          </li>
+        </ul>
+      </div>
     </section>
 
-    <section class="stats">
-      <div class="stat-card">
-        <span class="stat-label">Прогресс</span>
-        <span class="stat-value" id="progressValue">35%</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Этапов</span>
-        <span class="stat-value" id="stagesCount">4</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Бюджет</span>
-        <span class="stat-value">2.4 млн ₽</span>
+    <section class="section section-dark" id="categories">
+      <div class="section-inner">
+        <h2 class="section-title">Категории экспертиз</h2>
+        <p class="section-lead">Узкая специализация. Строгий отбор. Премиальный сегмент.</p>
+
+        <div class="category-grid">
+          <article class="category-card">
+            <h3>Право и compliance</h3>
+            <p>Корпоративное право, договоры, арбитраж, защита интересов бизнеса.</p>
+          </article>
+          <article class="category-card">
+            <h3>Финансы и учёт</h3>
+            <p>Бухгалтерия, налоги, финансовое планирование, аудит и отчётность.</p>
+          </article>
+          <article class="category-card">
+            <h3>Маркетинг и рост</h3>
+            <p>Стратегия, performance, контент, бренд и выход на новые рынки.</p>
+          </article>
+          <article class="category-card">
+            <h3>Дизайн и продукт</h3>
+            <p>UX/UI, айдентика, презентации, визуальные системы для бизнеса.</p>
+          </article>
+        </div>
       </div>
     </section>
 
-    <section class="stages">
-      <h2>Этапы строительства</h2>
-      <ul class="stage-list" id="stageList">
-        <li class="stage-item done">
-          <span class="stage-name">Фундамент</span>
-          <span class="stage-status">Готово</span>
-        </li>
-        <li class="stage-item done">
-          <span class="stage-name">Стены</span>
-          <span class="stage-status">Готово</span>
-        </li>
-        <li class="stage-item active">
-          <span class="stage-name">Крыша</span>
-          <span class="stage-status">В работе</span>
-        </li>
-        <li class="stage-item">
-          <span class="stage-name">Отделка</span>
-          <span class="stage-status">Ожидает</span>
-        </li>
-      </ul>
+    <section class="section" id="how">
+      <div class="section-inner section-split">
+        <div>
+          <h2 class="section-title">Как это работает</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-num">01</span>
+              <div>
+                <h3>Выберите эксперта</h3>
+                <p>Фильтруйте по категории, рейтингу, цене и опыту.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">02</span>
+              <div>
+                <h3>Оформите заказ</h3>
+                <p>Бронирование, чат и согласование условий — внутри платформы.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">03</span>
+              <div>
+                <h3>Получите результат</h3>
+                <p>Оплата через безопасную сделку. Отзыв после завершения работы.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <aside class="trust-panel" id="experts">
+          <h3>Для экспертов</h3>
+          <p>Создайте профессиональный профиль, покажите портфолио и масштабируйте практику без посредников.</p>
+          <a href="#" class="btn btn-outline">Создать профиль</a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section-muted" id="clients">
+      <div class="section-inner clients-banner">
+        <div>
+          <h2 class="section-title">Для клиентов</h2>
+          <p class="section-lead">
+            Доступ к проверенным специалистам с прозрачными ценами,
+            рейтингами и гарантией безопасности каждой сделки.
+          </p>
+        </div>
+        <a href="#" class="btn btn-primary btn-lg">Начать поиск</a>
+      </div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>ДомПро — локальный прототип © 2026</p>
+    <div class="footer-inner">
+      <a href="index.html" class="logo logo-footer">
+        <img src="assets/logo.png" alt="DomPro" class="logo-img" />
+        <span class="logo-text">DomPro</span>
+      </a>
+      <p>Маркетплейс экспертов премиум-сегмента © 2026</p>
+    </div>
   </footer>
 
   <script src="js/app.js"></script>
