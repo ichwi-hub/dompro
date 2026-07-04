@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Вход — DomPro</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <a href="index.html" class="logo" style="margin-bottom:1.5rem">
+        <img src="../assets/logo.png" alt="" class="logo-img" />
+        <span class="logo-text">DomPro</span>
+      </a>
+      <h1>Вход</h1>
+      <p class="lead">Войдите как эксперт или заказчик</p>
+
+      <div class="role-switch">
+        <button type="button" class="active" data-role="expert">Я эксперт</button>
+        <button type="button" data-role="client">Я клиент</button>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="login">Email или телефон</label>
+          <input id="login" name="login" type="text" required placeholder="email@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input id="password" name="password" type="password" required minlength="8" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+      </form>
+
+      <p class="form-footer">
+        Нет аккаунта?
+        <a href="register-expert.html" id="linkExpert">Регистрация эксперта</a> ·
+        <a href="register-client.html" id="linkClient">Регистрация клиента</a>
+      </p>
+    </div>
+  </main>
+  <script type="module" src="js/pages/login.js"></script>
+</body>
+</html>

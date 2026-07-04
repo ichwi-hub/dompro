@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Регистрация клиента — DomPro</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1>Найти специалиста</h1>
+      <p class="lead">Создайте аккаунт заказчика и публикуйте заказы</p>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="full_name">ФИО или название компании</label>
+          <input id="full_name" name="full_name" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+        <div class="form-group">
+          <label for="phone">Телефон</label>
+          <input id="phone" name="phone" type="tel" required placeholder="+79001234567" />
+        </div>
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input id="password" name="password" type="password" required minlength="8" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Создать аккаунт</button>
+      </form>
+
+      <p class="form-footer">Уже есть аккаунт? <a href="login.html">Войти</a></p>
+    </div>
+  </main>
+  <script type="module" src="js/pages/register-client.js"></script>
+</body>
+</html>

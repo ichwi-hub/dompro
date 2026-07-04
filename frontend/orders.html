@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Заказы — DomPro</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="expert-dashboard.html" class="logo"><img src="../assets/logo.png" alt="" class="logo-img" /><span class="logo-text">DomPro</span></a>
+      <div class="header-actions">
+        <span id="balanceBadge" class="badge">—</span>
+        <a href="expert-dashboard.html" class="btn btn-ghost">Кабинет</a>
+        <a href="#" id="logoutBtn" class="btn btn-outline">Выйти</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-inner">
+      <h1 class="page-title">Открытые заказы</h1>
+      <p class="page-subtitle">Отклик стоит 150 ₽. Нужна верификация и достаточный баланс.</p>
+      <ul class="list" id="ordersList"><li class="empty-state">Загрузка...</li></ul>
+    </div>
+  </main>
+
+  <div class="modal" id="responseModal">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-content">
+      <h2>Откликнуться на заказ</h2>
+      <p id="responseOrderTitle" style="color:var(--text-muted);margin-bottom:1rem"></p>
+      <form id="responseForm">
+        <div class="form-group">
+          <label>Сопроводительное письмо</label>
+          <textarea name="message" placeholder="Расскажите, почему вы подходите для этой задачи"></textarea>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-muted)">С баланса будет списано 150 ₽</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+          <button type="submit" class="btn btn-primary">Отправить отклик</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/pages/orders.js"></script>
+</body>
+</html>

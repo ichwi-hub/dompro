@@ -5,12 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from core.dependencies import get_current_user
 from core.security import create_access_token, hash_password, verify_password
+from models.client import Client
 from models.enums import UserRole, VerificationStatus
 from models.expert import Expert
 from models.user import User
 from schemas.user import (
     LoginRequest,
     LoginResponse,
+    RegisterClientRequest,
+    RegisterClientResponse,
     RegisterRequest,
     TokenResponse,
     UserResponse,
@@ -57,6 +60,50 @@ async def register(
 
     token = create_access_token({"sub": str(user.id), "role": user.role.value})
     return TokenResponse(access_token=token)
+
+
+@router.post(
+    "/register-client",
+    response_model=RegisterClientResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_client(
+    payload: RegisterClientRequest,
+    db: AsyncSession = Depends(get_db),
+) -> RegisterClientResponse:
+    """Регистрация заказчика: пользователь + профиль client."""
+    existing = await db.execute(
+        select(User).where(
+            or_(User.email == payload.email.lower(), User.phone == payload.phone)
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Пользователь с таким email или телефоном уже существует",
+        )
+
+    user = User(
+        email=payload.email.lower(),
+        phone=payload.phone,
+        password_hash=hash_password(payload.password),
+        role=UserRole.CLIENT,
+        full_name=payload.full_name,
+        verification_status=VerificationStatus.UNVERIFIED,
+    )
+    db.add(user)
+    await db.flush()
+
+    client = Client(user_id=user.id, company_name=None)
+    db.add(client)
+    await db.commit()
+    await db.refresh(user)
+
+    token = create_access_token({"sub": str(user.id), "role": user.role.value})
+    return RegisterClientResponse(
+        access_token=token,
+        user=UserResponse.model_validate(user),
+    )
 
 
 @router.post("/login", response_model=LoginResponse)

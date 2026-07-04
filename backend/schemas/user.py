@@ -6,11 +6,20 @@ from models.enums import UserRole, VerificationStatus
 
 
 class RegisterRequest(BaseModel):
-    """Этап 1: регистрация аккаунта (30 секунд)."""
+    """Этап 1: регистрация аккаунта эксперта."""
 
     phone: str = Field(min_length=10, max_length=32, examples=["+79001234567"])
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+
+class RegisterClientRequest(BaseModel):
+    """Регистрация заказчика."""
+
+    phone: str = Field(min_length=10, max_length=32, examples=["+79001234567"])
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    full_name: str = Field(min_length=2, max_length=255)
 
 
 class LoginRequest(BaseModel):
@@ -40,6 +49,14 @@ class UserResponse(BaseModel):
     verification_status: VerificationStatus
     created_at: datetime
     updated_at: datetime
+
+
+class RegisterClientResponse(BaseModel):
+    """Ответ при регистрации клиента."""
+
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
 
 
 class LoginResponse(BaseModel):

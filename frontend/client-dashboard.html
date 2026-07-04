@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Кабинет клиента — DomPro</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo"><img src="../assets/logo.png" alt="" class="logo-img" /><span class="logo-text">DomPro</span></a>
+      <div class="header-actions">
+        <a href="#" id="logoutBtn" class="btn btn-outline">Выйти</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-inner">
+      <h1 class="page-title">Кабинет заказчика</h1>
+      <p class="page-subtitle" id="userGreeting">Загрузка...</p>
+
+      <div class="dashboard-grid">
+        <section class="card card-full">
+          <h2>Создать заказ</h2>
+          <form id="createOrderForm">
+            <div class="form-group"><label>Название</label><input name="title" required minlength="3" placeholder="Нужен юрист по разводу" /></div>
+            <div class="form-group"><label>Описание</label><textarea name="description" placeholder="Подробности задачи"></textarea></div>
+            <div class="form-group"><label>Категория</label>
+              <select name="category" required>
+                <option value="Семейное право">Семейное право</option>
+                <option value="Корпоративное право">Корпоративное право</option>
+                <option value="Налоговое право">Налоговое право</option>
+                <option value="Трудовое право">Трудовое право</option>
+                <option value="Интеллектуальная собственность">Интеллектуальная собственность</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Бюджет (₽)</label><input name="budget" type="number" min="0" step="1000" /></div>
+            <div class="form-group"><label>Срок</label><input name="deadline" type="date" /></div>
+            <button type="submit" class="btn btn-primary">Опубликовать заказ</button>
+          </form>
+        </section>
+
+        <section class="card card-full">
+          <h2>Мои заказы</h2>
+          <ul class="list" id="ordersList"><li class="empty-state">Загрузка...</li></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/pages/client-dashboard.js"></script>
+</body>
+</html>

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -21,8 +21,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import AsyncSessionLocal
 from core.security import hash_password
 from models.client import Client
-from models.enums import UserRole, VerificationStatus
+from models.enums import OrderStatus, UserRole, VerificationStatus
 from models.expert import Expert
+from models.order import Order
 from models.user import User
 
 
@@ -294,6 +295,94 @@ async def seed_test_data(session: AsyncSession) -> dict[str, int]:
     return stats
 
 
+async def seed_test_orders(session: AsyncSession) -> int:
+    """Создать тестовые заказы от client1 и client2 (статус open).
+
+    Пропускает заказ, если у клиента уже есть заказ с таким же title.
+    """
+    created = 0
+    orders_spec = [
+        # 3 заказа от client1@dompro.ru
+        (
+            "client1@dompro.ru",
+            "Нужен юрист по разводу",
+            "Требуется консультация по разделу имущества и алиментам",
+            "Семейное право",
+            Decimal("50000.00"),
+            date(2026, 8, 1),
+        ),
+        (
+            "client1@dompro.ru",
+            "Проверка договора аренды",
+            "Нужен анализ договора коммерческой аренды перед подписанием",
+            "Корпоративное право",
+            Decimal("15000.00"),
+            date(2026, 7, 15),
+        ),
+        (
+            "client1@dompro.ru",
+            "Налоговая проверка ИП",
+            "Подготовка к камеральной проверке, консультация по документам",
+            "Налоговое право",
+            Decimal("30000.00"),
+            None,
+        ),
+        # 2 заказа от client2@dompro.ru
+        (
+            "client2@dompro.ru",
+            "Регистрация товарного знака",
+            "Полное сопровождение регистрации ТЗ для ООО",
+            "Интеллектуальная собственность",
+            Decimal("80000.00"),
+            date(2026, 9, 1),
+        ),
+        (
+            "client2@dompro.ru",
+            "Трудовой спор с сотрудником",
+            "Увольнение по статье, риски судебного иска",
+            "Трудовое право",
+            Decimal("25000.00"),
+            date(2026, 7, 30),
+        ),
+    ]
+
+    for client_email, title, description, category, budget, deadline in orders_spec:
+        user = await get_user_by_email(session, client_email)
+        if user is None:
+            print(f"  [SKIP ORDER] Клиент не найден: {client_email}")
+            continue
+
+        client_result = await session.execute(
+            select(Client).where(Client.user_id == user.id)
+        )
+        client = client_result.scalar_one_or_none()
+        if client is None:
+            print(f"  [SKIP ORDER] Профиль client не найден: {client_email}")
+            continue
+
+        existing = await session.execute(
+            select(Order).where(Order.client_id == client.id, Order.title == title)
+        )
+        if existing.scalar_one_or_none():
+            print(f"  [SKIP ORDER] Уже есть: {title}")
+            continue
+
+        order = Order(
+            client_id=client.id,
+            title=title,
+            description=description,
+            category=category,
+            budget=budget,
+            deadline=deadline,
+            status=OrderStatus.OPEN,
+        )
+        session.add(order)
+        created += 1
+        print(f"  [OK ORDER] {title} ({client_email})")
+
+    return created
+
+
 def print_credentials_report() -> None:
     """Вывести список тестовых учётных записей."""
     print("\n" + "=" * 60)
@@ -313,6 +402,7 @@ async def print_db_summary(session: AsyncSession) -> None:
     users_count = await session.scalar(select(func.count()).select_from(User))
     experts_count = await session.scalar(select(func.count()).select_from(Expert))
     clients_count = await session.scalar(select(func.count()).select_from(Client))
+    orders_count = await session.scalar(select(func.count()).select_from(Order))
 
     result = await session.execute(
         select(User.email, User.role, User.verification_status)
@@ -328,6 +418,7 @@ async def print_db_summary(session: AsyncSession) -> None:
     print(f"Всего users в БД:   {users_count}")
     print(f"Всего experts в БД: {experts_count}")
     print(f"Всего clients в БД: {clients_count}")
+    print(f"Всего orders в БД:  {orders_count}")
     print(f"Тестовых аккаунтов: {len(rows)} / 6")
     print("-" * 60)
     for email, role, status in rows:
@@ -349,12 +440,14 @@ async def main() -> None:
         async with AsyncSessionLocal() as session:
             async with session.begin():
                 stats = await seed_test_data(session)
+                orders_created = await seed_test_orders(session)
 
             # Отдельная сессия для чтения после commit
             async with AsyncSessionLocal() as session:
                 await print_db_summary(session)
 
-        print(f"\nСоздано новых: {stats['created']}, пропущено (уже есть): {stats['skipped']}")
+        print(f"\nСоздано новых пользователей: {stats['created']}, пропущено: {stats['skipped']}")
+        print(f"Создано новых заказов: {orders_created}")
         print_credentials_report()
         print("\nТестовые данные готовы.")
 

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DomPro — Маркетплейс экспертов</title>
+  <link rel="icon" href="../assets/logo.png" type="image/png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <img src="../assets/logo.png" alt="DomPro" class="logo-img" />
+        <span class="logo-text">DomPro</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Меню"><span></span><span></span></button>
+      <nav class="nav">
+        <a href="#how">Как это работает</a>
+        <a href="#categories">Категории</a>
+      </nav>
+      <div class="header-actions">
+        <a href="login.html" class="btn btn-ghost">Войти</a>
+        <a href="register-expert.html" class="btn btn-outline">Стать экспертом</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="hero-eyebrow">Вертикальный маркетплейс интеллектуальных услуг</p>
+        <h1 class="hero-title">
+          Эксперты премиум-класса.<br />
+          <span class="hero-title-accent">Одна платформа — полное доверие.</span>
+        </h1>
+        <p class="hero-subtitle">
+          DomPro объединяет юристов, бухгалтеров, маркетологов и других профессионалов
+          с клиентами. Эксперты платят только за право откликнуться — 150 ₽ за лид.
+        </p>
+        <div class="hero-cta">
+          <a href="register-client.html" class="btn btn-primary btn-lg">Найти специалиста</a>
+          <a href="register-expert.html" class="btn btn-outline btn-lg">Разместить услуги</a>
+        </div>
+        <ul class="hero-stats">
+          <li><strong>150 ₽</strong><span>стоимость отклика</span></li>
+          <li><strong>0%</strong><span>комиссии со сделки</span></li>
+          <li><strong>100%</strong><span>верифицированные эксперты</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="how">
+      <div class="section-inner">
+        <h2 class="section-title">Как это работает</h2>
+        <p class="section-lead">Прозрачная монетизация: платформа зарабатывает на лидах, а не на сделках.</p>
+        <ol class="steps">
+          <li>
+            <span class="step-num">01</span>
+            <div>
+              <h3>Эксперт пополняет баланс</h3>
+              <p>Внутренний кошелёк на платформе — для оплаты откликов на заказы.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">02</span>
+            <div>
+              <h3>Откликается на заказ (−150 ₽)</h3>
+              <p>Верифицированный эксперт отправляет сопроводительное письмо. С баланса списывается плата за лид.</p>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">03</span>
+            <div>
+              <h3>Клиент выбирает специалиста</h3>
+              <p>Заказчик сравнивает отклики и принимает лучшего. Оплата услуги — напрямую между сторонами.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="categories">
+      <div class="section-inner">
+        <h2 class="section-title">Категории экспертиз</h2>
+        <div class="category-grid">
+          <article class="category-card"><h3>Право</h3><p>Семейное, корпоративное, трудовое право.</p></article>
+          <article class="category-card"><h3>Финансы</h3><p>Налоги, бухгалтерия, аудит.</p></article>
+          <article class="category-card"><h3>Маркетинг</h3><p>Стратегия, бренд, performance.</p></article>
+          <article class="category-card"><h3>Дизайн</h3><p>UX/UI, айдентика, презентации.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-muted">
+      <div class="section-inner clients-banner">
+        <div>
+          <h2 class="section-title">Готовы начать?</h2>
+          <p class="section-lead">Войдите или зарегистрируйтесь за минуту.</p>
+        </div>
+        <a href="login.html" class="btn btn-primary btn-lg">Войти в аккаунт</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="index.html" class="logo"><img src="../assets/logo.png" alt="" class="logo-img" /><span class="logo-text">DomPro</span></a>
+      <p>Маркетплейс экспертов © 2026</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initMobileNav } from './js/common.js';
+    initMobileNav();
+  </script>
+</body>
+</html>

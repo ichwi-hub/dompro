@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Кабинет эксперта — DomPro</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo"><img src="../assets/logo.png" alt="" class="logo-img" /><span class="logo-text">DomPro</span></a>
+      <div class="header-actions">
+        <a href="orders.html" class="btn btn-ghost">Заказы</a>
+        <a href="#" id="logoutBtn" class="btn btn-outline">Выйти</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-inner">
+      <h1 class="page-title">Кабинет эксперта</h1>
+      <p class="page-subtitle" id="userGreeting">Загрузка...</p>
+
+      <div class="dashboard-grid">
+        <section class="card">
+          <h2>Профиль</h2>
+          <div id="profileInfo"><p>Загрузка...</p></div>
+          <div class="card-actions">
+            <button class="btn btn-outline btn-sm" id="editProfileBtn">Редактировать</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Верификация</h2>
+          <div id="verificationInfo"><p>Загрузка...</p></div>
+          <div class="card-actions" id="verificationActions"></div>
+        </section>
+
+        <section class="card">
+          <h2>Кошелёк</h2>
+          <p class="stat-value" id="balanceValue">—</p>
+          <p>Для отклика нужно минимум 150 ₽</p>
+          <div class="card-actions">
+            <button class="btn btn-primary btn-sm" id="topupBtn">Пополнить</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Заказы</h2>
+          <p>Открытые заказы от клиентов платформы</p>
+          <div class="card-actions">
+            <a href="orders.html" class="btn btn-primary btn-sm">Смотреть заказы</a>
+          </div>
+        </section>
+
+        <section class="card card-full">
+          <h2>История транзакций</h2>
+          <div id="transactionsList"><p class="empty-state">Загрузка...</p></div>
+        </section>
+
+        <section class="card card-full">
+          <h2>Мои отклики</h2>
+          <ul class="list" id="responsesList"><li class="empty-state">Загрузка...</li></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Модалка: редактирование профиля -->
+  <div class="modal" id="profileModal">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-content">
+      <h2>Редактировать профиль</h2>
+      <form id="profileForm">
+        <div class="form-group"><label>ФИО</label><input name="full_name" required /></div>
+        <div class="form-group"><label>Специализация</label><input name="specialization" required /></div>
+        <div class="form-group"><label>Стаж (лет)</label><input name="experience_years" type="number" min="0" required /></div>
+        <div class="form-group"><label>Описание</label><textarea name="description" required minlength="10"></textarea></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модалка: пополнение -->
+  <div class="modal" id="topupModal">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-content">
+      <h2>Пополнить баланс</h2>
+      <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.9rem">Заглушка — средства зачисляются мгновенно</p>
+      <form id="topupForm">
+        <div class="form-group"><label>Сумма (₽)</label><input name="amount" type="number" min="150" step="100" value="1000" required /></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+          <button type="submit" class="btn btn-primary">Пополнить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модалка: верификация -->
+  <div class="modal" id="verificationModal">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-content">
+      <h2>Документы для верификации</h2>
+      <form id="verificationForm">
+        <div class="form-group"><label>ИНН</label><input name="inn" required pattern="[0-9]{10,12}" /></div>
+        <div class="form-group"><label>Диплом (PDF/JPG)</label><input name="diploma_file" type="file" accept=".pdf,.jpg,.jpeg,.png" required /></div>
+        <div class="form-group"><label>Статус самозанятого/ИП</label><input name="self_employment_file" type="file" accept=".pdf,.jpg,.jpeg,.png" required /></div>
+        <div class="form-group"><label>Адвокатское удостоверение (опц.)</label><input name="bar_association_file" type="file" accept=".pdf,.jpg,.jpeg,.png" /></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-close>Отмена</button>
+          <button type="submit" class="btn btn-primary">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/pages/expert-dashboard.js"></script>
+</body>
+</html>

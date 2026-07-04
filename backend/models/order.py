@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import BigInteger, Date, DateTime, Enum, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
@@ -29,6 +29,7 @@ class Order(Base):
     description: Mapped[Optional[str]] = mapped_column(Text)
     category: Mapped[str] = mapped_column(String(128), nullable=False)
     budget: Mapped[Optional[Decimal]] = mapped_column(Numeric(12, 2))
+    deadline: Mapped[Optional[date]] = mapped_column(Date)
     status: Mapped[OrderStatus] = mapped_column(
         pg_enum(OrderStatus, "order_status"),
         nullable=False,

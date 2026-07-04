@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import models  # noqa: F401 — регистрация ORM-моделей
-from api.v1 import admin, auth, expert_profile, verification
+from api.v1 import admin, auth, expert_profile, orders, responses, verification, wallet
 from core.config import settings
 from core.database import get_db
 
@@ -38,6 +38,9 @@ app.include_router(auth.router, prefix=API_V1_PREFIX)
 app.include_router(expert_profile.router, prefix=API_V1_PREFIX)
 app.include_router(verification.router, prefix=API_V1_PREFIX)
 app.include_router(admin.router, prefix=API_V1_PREFIX)
+app.include_router(wallet.router, prefix=f"{API_V1_PREFIX}/wallet")
+app.include_router(orders.router, prefix=f"{API_V1_PREFIX}/orders")
+app.include_router(responses.router, prefix=API_V1_PREFIX)
 
 
 @app.get("/")
