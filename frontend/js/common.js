@@ -107,7 +107,7 @@ export async function checkAuth(requiredRole = null) {
   if (requiredRole && getUserRole() !== requiredRole) {
     showNotification('Нет доступа к этой странице', 'error');
     const role = getUserRole();
-    if (role === 'expert') window.location.href = 'expert-dashboard.html';
+    if (role === 'expert') window.location.href = 'workspace.html#feed';
     else if (role === 'client') window.location.href = 'client-dashboard.html';
     else window.location.href = 'login.html';
     return null;
@@ -123,7 +123,7 @@ export async function handleLoginSuccess(data) {
   else await fetchMe();
 
   const role = getUserRole();
-  if (role === 'expert') window.location.href = 'expert-dashboard.html';
+  if (role === 'expert') window.location.href = 'workspace.html#feed';
   else if (role === 'client') window.location.href = 'client-dashboard.html';
   else window.location.href = 'login.html';
 }

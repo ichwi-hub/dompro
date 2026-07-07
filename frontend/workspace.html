@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workspace эксперта — DomPro</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/workspace.css" />
+</head>
+<body>
+  <div class="workspace-layout">
+    <aside class="workspace-sidebar">
+      <a href="index.html" class="workspace-logo">DomPro Workspace</a>
+      <nav class="workspace-nav" id="workspaceNav">
+        <a class="workspace-link" data-route="feed" href="#feed">Лента</a>
+        <a class="workspace-link" data-route="clients" href="#clients">Мои клиенты</a>
+        <a class="workspace-link" data-route="contracts" href="#contracts">Договоры</a>
+        <a class="workspace-link" data-route="friends" href="#friends">Друзья</a>
+        <a class="workspace-link" data-route="blogs" href="#blogs">Блоги</a>
+        <a class="workspace-link" data-route="laws" href="#laws">Законодательство</a>
+      </nav>
+      <button id="logoutBtn" class="btn btn-outline btn-sm workspace-logout">Выйти</button>
+    </aside>
+
+    <main class="workspace-main">
+      <header class="workspace-header">
+        <h1 id="workspaceTitle">Workspace</h1>
+        <p id="workspaceSubtitle">Загрузка...</p>
+      </header>
+      <section id="workspaceContent" class="workspace-content"></section>
+    </main>
+  </div>
+
+  <script type="module" src="js/pages/workspace.js"></script>
+</body>
+</html>

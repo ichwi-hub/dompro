@@ -183,3 +183,14 @@ export async function rejectResponse(responseId) {
 export async function getExpertResponses() {
   return request('/expert/responses');
 }
+
+// --- Expert clients (workspace) ---
+
+export async function getExpertClients() {
+  const data = await request('/expert/clients');
+  return data.items || [];
+}
+
+export async function getExpertClientDetail(clientId) {
+  return request(`/expert/clients/${clientId}`);
+}
