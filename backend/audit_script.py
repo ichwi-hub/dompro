@@ -90,26 +90,13 @@ async def check_database() -> dict[str, object]:
         return {"connected": False, "error": "DATABASE_URL не задан"}
 
     try:
-        import asyncio
-        import ssl
-        from urllib.parse import urlparse
-
         import asyncpg
 
-        url = database_url.replace(":6543/", ":5432/") if ":6543/" in database_url else database_url
-        parsed = urlparse(url)
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        sys.path.insert(0, str(BACKEND_ROOT))
+        from core.pg_connect import asyncpg_connect_kwargs, migration_database_url
 
         conn = await asyncpg.connect(
-            host=parsed.hostname,
-            port=parsed.port or 5432,
-            user=parsed.username,
-            password=parsed.password,
-            database=parsed.path.lstrip("/"),
-            ssl=ctx if parsed.hostname and "supabase.com" in parsed.hostname else None,
-            statement_cache_size=0,
+            **asyncpg_connect_kwargs(migration_database_url(database_url))
         )
         try:
             tables = await conn.fetch(
@@ -129,7 +116,7 @@ async def check_database() -> dict[str, object]:
                     counts[table] = "таблица отсутствует"
             return {
                 "connected": True,
-                "host": parsed.hostname,
+                "host": migration_database_url(database_url).split("@")[-1].split("/")[0],
                 "tables": table_names,
                 "counts": counts,
             }
@@ -146,9 +133,9 @@ def check_env() -> dict[str, bool]:
     keys = [
         "DATABASE_URL",
         "SECRET_KEY",
-        "SUPABASE_URL",
-        "SUPABASE_KEY",
-        "SUPABASE_STORAGE_BUCKET",
+        "STORAGE_BACKEND",
+        "LOCAL_STORAGE_PATH",
+        "API_PUBLIC_URL",
     ]
     return {key: bool(os.environ.get(key)) for key in keys}
 

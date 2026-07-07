@@ -54,6 +54,7 @@ async function loadProfile() {
     <p><strong>${profile.full_name || 'Не указано'}</strong></p>
     <p class="list-item-meta">${profile.specialization || 'Специализация не указана'}</p>
     <p class="list-item-meta">Стаж: ${profile.experience_years} лет · Рейтинг: ${profile.rating}</p>
+    ${profile.education ? `<p class="list-item-meta">Образование: ${profile.education}</p>` : ''}
     <p>${profile.description || '—'}</p>
     ${!profile.is_profile_complete ? '<p class="badge badge-warning">Профиль не заполнен</p>' : ''}
   `;
@@ -125,6 +126,8 @@ document.getElementById('editProfileBtn').addEventListener('click', () => {
     form.specialization.value = profile.specialization || '';
     form.experience_years.value = profile.experience_years || 0;
     form.description.value = profile.description || '';
+    if (form.education) form.education.value = profile.education || '';
+    if (form.photo_url) form.photo_url.value = profile.photo_url || '';
   }
   openModal('profileModal');
 });
@@ -138,6 +141,8 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
       specialization: f.specialization.value.trim(),
       experience_years: Number(f.experience_years.value),
       description: f.description.value.trim(),
+      education: f.education?.value.trim() || null,
+      photo_url: f.photo_url?.value.trim() || null,
     });
     closeModal('profileModal');
     showNotification('Профиль обновлён', 'success');

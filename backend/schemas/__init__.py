@@ -1,5 +1,5 @@
 from schemas.client import ClientCreate, ClientResponse
-from schemas.contract import ContractCreate, ContractResponse
+from schemas.contract import ContractResponse, ExpertContractListItem, ExpertContractListResponse
 from schemas.expert import ExpertProfileResponse, ExpertProfileUpdate
 from schemas.order import OrderCreate, OrderResponse
 from schemas.response import ResponseCreate, ResponseResponse
@@ -28,8 +28,9 @@ __all__ = [
     "ResponseResponse",
     "TransactionCreate",
     "TransactionResponse",
-    "ContractCreate",
     "ContractResponse",
+    "ExpertContractListItem",
+    "ExpertContractListResponse",
     "WalletResponse",
     "VerificationStatusResponse",
     "VerificationRejectRequest",

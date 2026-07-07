@@ -32,7 +32,7 @@ async def submit_verification(
     """Этап 3: подача документов на верификацию.
 
     Требует заполненного профиля. ИНН проверяется автоматически (заглушка ФНС).
-    Документы загружаются в Supabase Storage.
+    Документы загружаются в локальное хранилище.
     """
     if not expert.is_profile_complete:
         raise HTTPException(

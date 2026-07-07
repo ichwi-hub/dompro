@@ -1,37 +1,19 @@
-"""Применение schema.sql к PostgreSQL (Supabase)."""
+"""Применение schema.sql к PostgreSQL."""
 
 from __future__ import annotations
 
 import asyncio
 import os
 import re
-import ssl
 from pathlib import Path
-from urllib.parse import urlparse
 
 import asyncpg
 from dotenv import load_dotenv
 
+from core.pg_connect import asyncpg_connect_kwargs, migration_database_url
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SCHEMA_PATH = PROJECT_ROOT / "database" / "schema.sql"
-
-
-def migration_database_url(url: str) -> str:
-    """Для DDL используем session mode pooler (порт 5432)."""
-    if ":6543/" in url:
-        return url.replace(":6543/", ":5432/")
-    return url
-
-
-def parse_database_url(url: str) -> dict[str, str | int]:
-    parsed = urlparse(url)
-    return {
-        "user": parsed.username or "postgres",
-        "password": parsed.password or "",
-        "host": parsed.hostname or "localhost",
-        "port": parsed.port or 5432,
-        "database": (parsed.path or "/postgres").lstrip("/"),
-    }
 
 
 def split_sql_statements(sql: str) -> list[str]:
@@ -58,24 +40,11 @@ async def apply_schema() -> None:
     if not database_url:
         raise SystemExit("DATABASE_URL не задан в .env")
 
-    params = parse_database_url(database_url)
     schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
     schema_sql = re.sub(r"^BEGIN;\s*", "", schema_sql, flags=re.IGNORECASE)
     schema_sql = re.sub(r"\s*COMMIT;\s*$", "", schema_sql, flags=re.IGNORECASE)
 
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE
-
-    conn = await asyncpg.connect(
-        host=str(params["host"]),
-        port=int(params["port"]),
-        user=str(params["user"]),
-        password=str(params["password"]),
-        database=str(params["database"]),
-        ssl=ssl_context if "supabase.com" in str(params["host"]) else None,
-        statement_cache_size=0,
-    )
+    conn = await asyncpg.connect(**asyncpg_connect_kwargs(database_url))
 
     try:
         for statement in split_sql_statements(schema_sql):

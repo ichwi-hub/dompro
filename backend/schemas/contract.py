@@ -2,14 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class ContractCreate(BaseModel):
-    """Создание договора между сторонами."""
-
-    order_id: int
-    expert_id: int
-    client_id: int
-    pdf_url: str = Field(min_length=1)
+from models.enums import ContractStatus
 
 
 class ContractResponse(BaseModel):
@@ -21,6 +14,25 @@ class ContractResponse(BaseModel):
     order_id: int
     expert_id: int
     client_id: int
-    pdf_url: str
+    pdf_path: str
+    status: ContractStatus
     signed_at: datetime | None
     created_at: datetime
+    updated_at: datetime
+
+
+class ExpertContractListItem(BaseModel):
+    """Договор в списке workspace эксперта."""
+
+    id: int
+    order_id: int
+    order_title: str
+    client_name: str
+    status: ContractStatus
+    created_at: datetime
+    pdf_path: str
+
+
+class ExpertContractListResponse(BaseModel):
+    items: list[ExpertContractListItem]
+    total: int

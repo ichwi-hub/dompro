@@ -5,6 +5,7 @@ from sqlalchemy import BigInteger, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
+from models.enums import ContractStatus, pg_enum
 
 if TYPE_CHECKING:
     from models.client import Client
@@ -33,11 +34,22 @@ class Contract(Base):
         ForeignKey("clients.id", ondelete="CASCADE"),
         nullable=False,
     )
-    pdf_url: Mapped[str] = mapped_column(Text, nullable=False)
+    pdf_path: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[ContractStatus] = mapped_column(
+        pg_enum(ContractStatus, "contract_status"),
+        nullable=False,
+        default=ContractStatus.DRAFT,
+    )
     signed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
         nullable=False,
     )
 

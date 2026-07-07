@@ -11,6 +11,8 @@ from models.enums import ExpertVerificationStatus, VerificationStatus
 from models.expert import Expert
 from models.user import User
 from models.verification import ExpertVerification
+from schemas.expert import ExpertProfileResponse
+from schemas.order import OrderListResponse
 from schemas.verification import ExpertVerificationResponse, VerificationRejectRequest
 
 router = APIRouter(prefix="/admin", tags=["Администрирование"])
@@ -95,6 +97,56 @@ async def approve_verification(
     await db.commit()
     await db.refresh(verification)
     return _to_admin_response(verification)
+
+
+@router.get("/experts/{expert_id}", response_model=ExpertProfileResponse)
+async def get_expert_for_admin(
+    expert_id: int,
+    _: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+) -> ExpertProfileResponse:
+    """Профиль эксперта для модерации."""
+    from api.v1.expert_profile import _build_profile_response
+
+    result = await db.execute(
+        select(Expert)
+        .options(selectinload(Expert.user))
+        .where(Expert.id == expert_id)
+    )
+    expert = result.scalar_one_or_none()
+    if expert is None:
+        raise HTTPException(status_code=404, detail="Эксперт не найден")
+    return _build_profile_response(expert)
+
+
+@router.get("/orders", response_model=OrderListResponse)
+async def list_orders_for_admin(
+    page: int = 1,
+    limit: int = 50,
+    _: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+) -> OrderListResponse:
+    """Все заказы платформы (для администратора)."""
+    from sqlalchemy import func
+    from models.client import Client
+    from models.order import Order
+
+    query = select(Order).options(selectinload(Order.client).selectinload(Client.user))
+    total = await db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    offset = (page - 1) * limit
+    result = await db.execute(
+        query.order_by(Order.created_at.desc()).offset(offset).limit(limit)
+    )
+    orders = result.scalars().all()
+
+    from api.v1.orders import _order_to_response
+
+    return OrderListResponse(
+        items=[_order_to_response(o, show_client_name=True) for o in orders],
+        total=total,
+        page=page,
+        limit=limit,
+    )
 
 
 @router.put("/verifications/{verification_id}/reject", response_model=ExpertVerificationResponse)

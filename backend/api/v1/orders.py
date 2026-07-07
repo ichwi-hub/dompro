@@ -10,8 +10,10 @@ from sqlalchemy.orm import selectinload
 from core.database import get_db
 from core.dependencies import get_current_client, get_current_user
 from models.client import Client
-from models.enums import OrderStatus, UserRole
+from models.enums import OrderStatus, ResponseStatus, UserRole
+from models.expert import Expert
 from models.order import Order
+from models.response import Response
 from models.user import User
 from schemas.order import OrderCreate, OrderListResponse, OrderResponse, OrderStatusUpdate
 
@@ -158,9 +160,25 @@ async def get_order(
         return _order_to_response(order)
 
     if user.role == UserRole.EXPERT:
-        if order.status != OrderStatus.OPEN:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Заказ недоступен")
-        return _order_to_response(order, show_client_name=True)
+        expert_result = await db.execute(select(Expert).where(Expert.user_id == user.id))
+        expert = expert_result.scalar_one_or_none()
+        if expert is None:
+            raise HTTPException(status_code=404, detail="Профиль эксперта не найден")
+
+        if order.status == OrderStatus.OPEN:
+            return _order_to_response(order, show_client_name=True)
+
+        response_result = await db.execute(
+            select(Response).where(
+                Response.order_id == order_id,
+                Response.expert_id == expert.id,
+            )
+        )
+        my_response = response_result.scalar_one_or_none()
+        if my_response and order.status == OrderStatus.IN_PROGRESS:
+            return _order_to_response(order, show_client_name=True)
+
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Заказ недоступен")
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет доступа")
 

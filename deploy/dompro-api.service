@@ -1,0 +1,38 @@
+# /etc/systemd/system/dompro-api.service
+# FastAPI (uvicorn) для DomPro — production unit
+#
+# Установка:
+#   sudo cp deploy/dompro-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now dompro-api
+
+[Unit]
+Description=DomPro FastAPI (uvicorn)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=dompro
+Group=dompro
+WorkingDirectory=/opt/dompro/backend
+
+# Переменные окружения из .env (корень проекта на VPS)
+EnvironmentFile=/opt/dompro/.env
+
+# 2 worker-процесса; для 1 GB RAM можно оставить 1
+ExecStart=/opt/dompro/backend/.venv/bin/uvicorn main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 2
+
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# Безопасность
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

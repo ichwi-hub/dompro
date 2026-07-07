@@ -4,6 +4,10 @@ Desktop.ini
 
 # Python / backend
 .env
+data/storage/
+backend/data/
+backend/scripts/adminvps/step2_*.txt
+backend/pytest_migration.log
 .venv/
 venv/
 __pycache__/

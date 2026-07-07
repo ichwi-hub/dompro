@@ -1,5 +1,13 @@
-/** Детали заказа и отклики (для клиента) */
-import { acceptResponse, getOrder, getOrderResponses, rejectResponse } from '../api.js';
+/** Детали заказа: клиент или эксперт */
+import {
+  acceptResponse,
+  createOrderContract,
+  downloadContract,
+  getOrder,
+  getOrderContract,
+  getOrderResponses,
+  rejectResponse,
+} from '../api.js';
 import {
   checkAuth,
   formatDate,
@@ -14,8 +22,12 @@ import {
 const params = new URLSearchParams(window.location.search);
 const orderId = params.get('id');
 
+let userRole = null;
+
 async function init() {
-  await checkAuth('client');
+  const user = await checkAuth();
+  if (!user) return;
+  userRole = user.role;
   initLogoutButton();
 
   if (!orderId) {
@@ -24,7 +36,13 @@ async function init() {
   }
 
   await loadOrder();
-  await loadResponses();
+  if (userRole === 'client') {
+    await loadResponses();
+  } else {
+    const section = document.getElementById('responsesSection');
+    if (section) section.style.display = 'none';
+  }
+  await loadContractSection();
 }
 
 async function loadOrder() {
@@ -38,6 +56,63 @@ async function loadOrder() {
     </p>
     <div class="card"><p>${order.description || 'Без описания'}</p></div>
   `;
+}
+
+async function loadContractSection() {
+  const el = document.getElementById('contractSection');
+  if (!el) return;
+
+  if (userRole !== 'client' && userRole !== 'expert') {
+    el.innerHTML = '';
+    return;
+  }
+
+  try {
+    const order = await getOrder(orderId);
+    if (order.status !== 'in_progress') {
+      el.innerHTML = '';
+      return;
+    }
+
+    const contract = await getOrderContract(orderId);
+    if (contract && contract.id) {
+      el.innerHTML = `
+        <section class="card">
+          <h2>Договор</h2>
+          <p class="list-item-meta">Статус: ${contract.status}</p>
+          <button type="button" class="btn btn-outline btn-sm" id="downloadContractBtn">Скачать PDF</button>
+        </section>
+      `;
+      document.getElementById('downloadContractBtn').addEventListener('click', async () => {
+        try {
+          await downloadContract(contract.id);
+        } catch (err) {
+          handleApiError(err);
+        }
+      });
+      return;
+    }
+
+    el.innerHTML = `
+      <section class="card">
+        <h2>Договор</h2>
+        <p class="list-item-meta">Сформируйте PDF-договор по принятому заказу.</p>
+        <button class="btn btn-primary btn-sm" id="createContractBtn">Создать договор</button>
+      </section>
+    `;
+
+    document.getElementById('createContractBtn').addEventListener('click', async () => {
+      try {
+        await createOrderContract(orderId);
+        showNotification('Договор создан', 'success');
+        await loadContractSection();
+      } catch (err) {
+        handleApiError(err);
+      }
+    });
+  } catch (err) {
+    handleApiError(err);
+  }
 }
 
 async function loadResponses() {
@@ -76,6 +151,7 @@ async function loadResponses() {
         showNotification('Эксперт выбран, заказ в работе', 'success');
         await loadOrder();
         await loadResponses();
+        await loadContractSection();
       } catch (err) {
         handleApiError(err);
       }

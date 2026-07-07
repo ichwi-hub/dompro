@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from sqlalchemy import select
 
-from core.database import AsyncSessionLocal
+from tests.conftest import TestSessionLocal
 from models.enums import TransactionType
 from models.expert import Expert
 from models.transaction import Transaction
@@ -74,7 +74,7 @@ async def test_topup_creates_deposit_transaction(api_client):
     )
     assert topup.status_code == 200, topup.text
 
-    async with AsyncSessionLocal() as db:
+    async with TestSessionLocal() as db:
         user_row = await db.execute(select(User).where(User.email == expert["email"]))
         user = user_row.scalar_one()
 

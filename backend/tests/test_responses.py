@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 from sqlalchemy import select
 
-from core.database import AsyncSessionLocal
+from tests.conftest import TestSessionLocal
 from models.enums import OrderStatus, ResponseStatus, TransactionType
 from models.expert import Expert
 from models.order import Order
@@ -76,7 +76,7 @@ async def test_response_fee_is_charged_once_and_duplicate_rejected(api_client):
     )
     assert second.status_code == 400
 
-    async with AsyncSessionLocal() as db:
+    async with TestSessionLocal() as db:
         user_row = await db.execute(select(User).where(User.email == expert["email"]))
         user = user_row.scalar_one()
         expert_row = await db.execute(select(Expert).where(Expert.user_id == user.id))
@@ -99,7 +99,7 @@ async def test_expert_cannot_respond_to_own_order(api_client):
     await set_expert_verified_balance(email=expert["email"], balance=Decimal("1000.00"))
     client_id = await ensure_client_profile_for_user(expert["email"])
 
-    async with AsyncSessionLocal() as db:
+    async with TestSessionLocal() as db:
         user_result = await db.execute(select(User).where(User.email == expert["email"]))
         user = user_result.scalar_one()
         user.updated_at = datetime.now(UTC)
@@ -159,7 +159,7 @@ async def test_accept_one_response_rejects_others_and_moves_order(api_client):
     assert accept.status_code == 200, accept.text
     assert accept.json()["status"] == "accepted"
 
-    async with AsyncSessionLocal() as db:
+    async with TestSessionLocal() as db:
         rows = await db.execute(select(Response).where(Response.order_id == order_id))
         items = rows.scalars().all()
         statuses = {item.id: item.status for item in items}

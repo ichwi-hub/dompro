@@ -22,6 +22,7 @@ def _build_profile_response(expert: Expert) -> ExpertProfileResponse:
         photo_url=expert.photo_url,
         experience_years=expert.experience_years,
         specialization=expert.specialization,
+        education=expert.education,
         description=expert.description,
         rating=expert.rating,
         balance=expert.balance,
@@ -57,6 +58,7 @@ async def update_expert_profile(
     expert.full_name = payload.full_name
     expert.experience_years = payload.experience_years
     expert.specialization = payload.specialization
+    expert.education = payload.education
     expert.description = payload.description
     expert.category = payload.specialization
     expert.updated_at = datetime.now(timezone.utc)

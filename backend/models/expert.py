@@ -32,6 +32,7 @@ class Expert(Base):
     photo_url: Mapped[Optional[str]] = mapped_column(Text)
     experience_years: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     specialization: Mapped[Optional[str]] = mapped_column(String(255))
+    education: Mapped[Optional[str]] = mapped_column(Text)
     description: Mapped[Optional[str]] = mapped_column(Text)
     rating: Mapped[Decimal] = mapped_column(
         Numeric(3, 2),

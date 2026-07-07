@@ -62,3 +62,11 @@ class TransactionType(str, enum.Enum):
 
     DEPOSIT = "deposit"
     RESPONSE_FEE = "response_fee"
+
+
+class ContractStatus(str, enum.Enum):
+    """Статус договора между заказчиком и экспертом."""
+
+    DRAFT = "draft"
+    SIGNED = "signed"
+    CANCELLED = "cancelled"

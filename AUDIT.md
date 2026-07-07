@@ -1,317 +1,328 @@
 # Аудит проекта DomPro
 
-**Дата аудита:** 1 июля 2026  
+**Дата обновления:** 7 июля 2026  
 **Версия API:** 0.1.0  
-**Метод:** автоматический скрипт `backend/audit_script.py` + ручная проверка кода, БД и Swagger
+**Метод:** `backend/audit_script.py` + ручная верификация кода (`backend/main.py`, роутеры `api/v1/*`, `frontend/js/api.js`)
 
 ---
 
-## Резюме
+## О проекте и идее
 
-| Категория | Статус |
-|-----------|--------|
-| **Что работает** | Онбординг эксперта (регистрация → профиль → верификация → админ-модерация), JWT, подключение к Supabase PostgreSQL, 8 таблиц в БД |
-| **Что не работает / отсутствует** | Заказы, отклики, кошелёк (API), клиенты, фронт↔API, чат, PDF-договоры, уведомления, рейтинги |
-| **Инфраструктура** | `.env` настроен, миграции применены, тестовые пользователи в БД (3 users, 2 experts) |
-| **Git** | В репозитории только лендинг (2 коммита); весь backend — незакоммиченные локальные файлы |
+**DomPro (ДомПро)** — закрытая платформа для профессиональных фрилансеров: юристов, бухгалтеров, маркетологов, дизайнеров и других экспертов, которые работают с частными клиентами и бизнесом.
 
-### Что делать дальше (рекомендация)
+### Главная идея
 
-1. Закоммитить backend в git
-2. Подключить фронтенд к API (регистрация / вход / профиль / верификация)
-3. Реализовать MVP маркетплейса: заказы → отклики → списание `response_fee`
-4. Создать bucket `verifications` в Supabase Storage (если ещё не создан)
-5. Добавить тестового клиента и верифицированного эксперта в `test_data.py`
+Это **не доска объявлений** и не «ещё один биржевой маркетплейс». Цель — дать эксперту **рабочую среду**, в которой он ведёт практику целиком:
+
+| Обычный маркетплейс | DomPro (целевое состояние) |
+|---|---|
+| Лента заказов | Заказы + CRM клиентов + история взаимодействий |
+| Профиль и отклик | Верификация, кошелёк, комиссии, статусы сделок |
+| Переписка вне площадки | Workspace: клиенты, договоры, документы, знания |
+| Разрозненные инструменты | Единый кабинет эксперта под его ежедневную работу |
+
+**Для клиента** — проверенные специалисты, прозрачный процесс заказа, безопасная сделка.  
+**Для эксперта** — не просто поток заявок, а инструмент, где он **живёт профессионально**: принимает заказы, ведёт клиентскую базу, оформляет договоры, пополняет баланс, проходит модерацию.
+
+### Целевая аудитория
+
+- **Эксперты:** юристы, бухгалтеры, налоговые консультанты, маркетологи, HR, дизайнеры и смежные специалисты.
+- **Клиенты:** физлица и малый бизнес, которым нужен надёжный исполнитель «под ключ».
+
+### Продуктовые фазы (дорожная карта)
+
+1. **Фаза 1 — MVP ядро** *(в основном сделано)*  
+   Регистрация, верификация, заказы, отклики, кошелёк, базовые кабинеты.
+
+2. **Фаза 1a — Workspace эксперта** *(начато)*  
+   Отдельная рабочая оболочка: «Мои клиенты», задел под договоры, ленту, блоги, законодательство.
+
+3. **Фаза 2 — Рабочая платформа** *(впереди)*  
+   Чат, договорный контур (PDF/подпись), рейтинги, уведомления, платёжный шлюз, полноценный деплой.
+
+4. **Фаза 3 — Масштаб и compliance**  
+   Production-инфраструктура в РФ (152-ФЗ), мониторинг, CI/CD, object storage (Yandex/VK Cloud).
 
 ---
 
-## 1. Структура проекта
+## Резюме текущего состояния
 
-### Backend (Python/FastAPI)
+Проект прошёл путь от статического прототипа и Supabase к **рабочему MVP на собственной PostgreSQL в России**:
 
-- [x] **Файлы в `backend/`** (45 файлов проекта, без `.venv`):
+- Реализовано ядро API: auth, профиль, верификация, заказы, отклики, кошелёк, админ-модерация, файлы, клиенты эксперта.
+- Есть полноценный `frontend/` с экранами и JS-обёрткой к реальному API.
+- База данных **перенесена с Supabase (EU) на AdminVPS (РФ)**; данные мигрированы, схема и миграции применены.
+- Файловое хранилище переведено с Supabase Storage на **локальную ФС** с абстракцией под будущий S3.
+- Добавлен **Expert Workspace** — первый шаг к «рабочей платформе», а не только к бирже заказов.
+- Написаны **интеграционные тесты** (auth, orders, responses, wallet) — гоняются против реальной БД AdminVPS.
+
+**Главные пробелы до «полноценной рабочей платформы»:** чат, договоры, реальные платежи, уведомления, production-деплой сайта на VPS, завершение всех секций Workspace.
+
+---
+
+## 1. Инфраструктура и миграция на AdminVPS
+
+### Зачем переехали
+
+Хранение персональных данных (ПДн) клиентов и документов верификации экспертов должно соответствовать **152-ФЗ**. Supabase (EU) для production не подходит — выбран **VPS в России** как dev/staging-контур с перспективой production.
+
+### Сервер БД (AdminVPS)
+
+| Параметр | Значение |
+|---|---|
+| Хост | `157.22.231.226` |
+| Имя | `dompro-db-dev` |
+| ОС | Ubuntu 24.04 |
+| Ресурсы | 1 vCPU, 1 GB RAM, 15 GB NVMe |
+| PostgreSQL | 16, SSL, tuning под 1 GB RAM |
+| Доступ к 5432 | Только с IP разработчика (UFW) |
+
+### Что сделано по миграции (шаги 2–6)
+
+1. **PostgreSQL на VPS** — скрипт `backend/scripts/adminvps/setup_postgres.sh`: пользователь/БД `dompro`, SSL, `pg_hba` (hostssl), UFW.
+2. **Схема и миграции** — `database/schema.sql`, `002_auth_verification.sql`, `003_order_deadline.sql`.
+3. **Перенос данных** — `backend/scripts/migrate_data.py` (Supabase → AdminVPS). Проверка: `verify_migration.py`.
+4. **Файловое хранилище** — абстракция `StorageBackend`, реализация `LocalFilesystemStorage`, мониторинг диска `disk_monitor.py`, API скачивания `/api/v1/files/{path}` (admin).
+5. **Слой подключения к БД** — `backend/core/pg_connect.py` (SSL/asyncpg/SQLAlchemy, корректная обработка `sslmode` в URL).
+6. **Конфигурация** — убраны зависимости от Supabase (`supabase_client.py` удалён, пакет `supabase` из `requirements.txt`). Настройки: `STORAGE_BACKEND`, `LOCAL_STORAGE_PATH`, `API_PUBLIC_URL` в `.env`.
+
+### Локальная разработка
+
+Сайт **не развёрнут на VPS** — там только PostgreSQL. Для работы нужны **два локальных процесса**:
+
+```powershell
+# Терминал 1 — API
+cd C:\projects\dompro\backend
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+
+# Терминал 2 — фронтенд
+cd C:\projects\dompro
+python -m http.server 5500 --bind 127.0.0.1
+```
+
+Точка входа: **http://127.0.0.1:5500/frontend/login.html**  
+API: **http://127.0.0.1:8000** (документация: `/docs`, health: `/health`)
+
+Файлы верификации сохраняются локально в `data/storage/` (путь задаётся `LOCAL_STORAGE_PATH` относительно корня проекта).
+
+---
+
+## 2. Backend (FastAPI)
+
+### Структура
 
 ```
 backend/
-├── main.py                    # Точка входа FastAPI
-├── requirements.txt
-├── pytest.ini
-├── README.md
-├── audit_script.py            # Скрипт аудита (создан при этом аудите)
-├── test_data.py               # Создание тестовых пользователей
-├── api/
-│   ├── __init__.py
-│   └── v1/
-│       ├── __init__.py
-│       ├── auth.py            # Регистрация, логин, /me
-│       ├── expert_profile.py  # Профиль эксперта
-│       ├── verification.py    # Верификация (документы)
-│       └── admin.py           # Модерация верификаций
-├── core/
-│   ├── config.py              # Настройки из .env
-│   ├── database.py            # Async SQLAlchemy
-│   ├── dependencies.py        # JWT-зависимости, роли
-│   ├── security.py            # bcrypt + JWT
-│   └── supabase_client.py     # Клиент Supabase Storage
-├── models/                    # 9 ORM-моделей (см. ниже)
-├── schemas/                   # 21 Pydantic-схема (см. ниже)
-├── services/
-│   ├── fns_api.py             # Проверка ИНН (заглушка)
-│   └── storage.py             # Загрузка файлов в Supabase
-├── scripts/
-│   ├── apply_schema.py
-│   ├── apply_migrations.py
-│   ├── list_tables.py
-│   └── test_persist.py
-└── tests/
-    └── test_auth.py           # 1 тест (register + login + me)
+├── api/v1/          # HTTP-роутеры
+├── core/            # config, database, security, pg_connect, storage
+├── models/          # SQLAlchemy ORM (8 сущностей)
+├── schemas/         # Pydantic-схемы запросов/ответов
+├── services/        # storage, fns_api (заглушка ИНН)
+├── scripts/         # миграции, аудит, adminvps
+└── tests/           # интеграционные тесты
 ```
 
-- [x] **Модели (`models/`)** — 8 таблиц + 1 алиас:
+### Реализованные API-роутеры
 
-| Модель | Файл | Таблица в БД | API реализован |
-|--------|------|--------------|----------------|
-| `User` | `user.py` | `users` | Да (auth) |
-| `Expert` | `expert.py` | `experts` | Да (profile) |
-| `ExpertVerification` | `verification.py` | `expert_verifications` | Да (verification, admin) |
-| `Client` | `client.py` | `clients` | **НЕТ** |
-| `Order` | `order.py` | `orders` | **НЕТ** |
-| `Response` | `response.py` | `responses` | **НЕТ** |
-| `Transaction` | `transaction.py` | `transactions` | **НЕТ** |
-| `Contract` | `contract.py` | `contracts` | **НЕТ** |
-| `Wallet` | `wallet.py` | (алиас `Expert`) | **НЕТ** |
+| Роутер | Префикс | Назначение |
+|---|---|---|
+| `auth` | `/api/v1/auth` | Регистрация эксперта/клиента, логин, `/me` |
+| `expert_profile` | `/api/v1/expert/profile` | Профиль эксперта (чтение/обновление) |
+| `verification` | `/api/v1/expert/verification` | Подача документов, статус верификации |
+| `admin` | `/api/v1/admin` | Модерация заявок (approve/reject) |
+| `orders` | `/api/v1/orders` | CRUD заказов, смена статуса |
+| `responses` | `/api/v1` | Отклики: создание, accept/reject, история эксперта |
+| `wallet` | `/api/v1/wallet` | Баланс, транзакции, пополнение (заглушка) |
+| `expert_clients` | `/api/v1/expert/clients` | Список и карточка клиентов (для Workspace) |
+| `files` | `/api/v1/files` | Скачивание файлов из локального хранилища |
 
-- [x] **Схемы (`schemas/`)** — 21 класс Pydantic:
+### Безопасность и роли
 
-| Схема | Файл | Используется в API |
-|-------|------|-------------------|
-| `RegisterRequest`, `LoginRequest`, `TokenResponse`, `UserResponse`, `LoginResponse` | `user.py` | Да |
-| `ExpertProfileUpdate`, `ExpertProfileResponse` | `expert.py` | Да |
-| `VerificationStatusResponse`, `VerificationRejectRequest`, `ExpertVerificationResponse` | `verification.py` | Да |
-| `ClientCreate`, `ClientResponse` | `client.py` | **НЕТ** |
-| `OrderCreate`, `OrderResponse` | `order.py` | **НЕТ** |
-| `ResponseCreate`, `ResponseResponse` | `response.py` | **НЕТ** |
-| `TransactionCreate`, `TransactionResponse` | `transaction.py` | **НЕТ** |
-| `ContractCreate`, `ContractResponse` | `contract.py` | **НЕТ** |
-| `WalletResponse` | `wallet.py` | **НЕТ** |
+JWT-авторизация, dependency-based доступ:
 
-- [x] **API эндпоинты (`api/v1/` + `main.py`)** — 13 эндпоинтов (проверено через Swagger `/openapi.json`):
+- `get_current_user`, `get_current_client`, `get_current_expert`
+- `get_verified_expert` — отклик только у верифицированных
+- `get_current_admin` — модерация и файлы
 
-| Метод | Путь | Описание | Файл |
-|-------|------|----------|------|
-| GET | `/` | Статус сервиса | `main.py` |
-| GET | `/health` | Проверка БД | `main.py` |
-| GET | `/api/v1/test` | Тест API | `main.py` |
-| POST | `/api/v1/auth/register` | Регистрация эксперта | `auth.py` |
-| POST | `/api/v1/auth/login` | Вход | `auth.py` |
-| GET | `/api/v1/auth/me` | Текущий пользователь | `auth.py` |
-| GET | `/api/v1/expert/profile` | Профиль эксперта | `expert_profile.py` |
-| PUT | `/api/v1/expert/profile` | Обновление профиля | `expert_profile.py` |
-| POST | `/api/v1/expert/verification/submit` | Подача документов | `verification.py` |
-| GET | `/api/v1/expert/verification/status` | Статус верификации | `verification.py` |
-| GET | `/api/v1/admin/verifications` | Список заявок (admin) | `admin.py` |
-| PUT | `/api/v1/admin/verifications/{id}/approve` | Одобрить (admin) | `admin.py` |
-| PUT | `/api/v1/admin/verifications/{id}/reject` | Отклонить (admin) | `admin.py` |
+### Бизнес-логика (ключевое)
 
-- [x] **Сервисы (`services/`)**:
-
-| Файл | Назначение | Статус |
-|------|------------|--------|
-| `fns_api.py` | Проверка ИНН + уведомление админа | Заглушка (контрольная сумма, `print`) |
-| `storage.py` | Загрузка файлов верификации | Реализовано (Supabase или `local://`) |
-
-### Database
-
-- [x] **Файлы миграций `database/`**:
-
-| Файл | Описание |
-|------|----------|
-| `schema.sql` | Базовая схема (8 таблиц, ENUM-типы) |
-| `migrations/002_auth_verification.sql` | Верификация, профили, `expert_verifications` |
-
-- [x] **Таблицы в Supabase** (проверено `audit_script.py` + `list_tables.py`):
-
-```
-clients, contracts, expert_verifications, experts, orders, responses, transactions, users
-```
-
-| Таблица | Записей |
-|---------|---------|
-| `users` | 3 |
-| `experts` | 2 |
-| `orders` | 0 |
-| `expert_verifications` | 0 |
-| `responses` | 0 |
-| `transactions` | 0 |
-| `contracts` | 0 |
-| `clients` | 0 |
-
-### Frontend
-
-- [x] **Папка `frontend/`** — **НЕТ**
-- [x] **Статический лендинг в корне проекта**:
-
-| Файл | Назначение |
-|------|------------|
-| `index.html` | Лендинг (Hero, категории, блоки) |
-| `css/style.css` | Стили |
-| `js/app.js` | Мобильное меню, демо-поиск (`alert`) |
-| `assets/logo.png` | Логотип |
-
-Фронтенд **не подключён к API**. Кнопки «Войти» и «Стать экспертом» — заглушки (`href="#"`).
-
----
-
-## 2. Реализованный функционал
-
-### Аутентификация
-
-- [x] Регистрация пользователя — `POST /api/v1/auth/register` (только роль `expert`)
-- [x] Вход (логин) — `POST /api/v1/auth/login` (email или телефон)
-- [x] JWT токены — `create_access_token` / `decode_access_token` (HS256, bcrypt)
-- [x] Защита роутов — FastAPI Depends (`get_current_user`, `get_current_expert`, `get_current_admin`, `get_verified_expert`)
-- [ ] Middleware — **НЕТ отдельного middleware**; защита через dependency injection
-- [ ] Регистрация клиента — **НЕ РЕАЛИЗОВАНО**
-
-### Профили
-
-- [x] Профиль эксперта (создание, редактирование) — `GET/PUT /api/v1/expert/profile`
-- [x] Верификация эксперта (загрузка документов) — `POST /api/v1/expert/verification/submit`
-- [x] Статус верификации — `GET /api/v1/expert/verification/status`
-- [x] Админ-панель (одобрение/отклонение) — `GET/PUT /api/v1/admin/verifications/*`
-- [ ] Профиль клиента — **НЕ РЕАЛИЗОВАНО** (модель и схема есть)
-- [ ] Каталог экспертов — **НЕ РЕАЛИЗОВАНО**
-
-### Заказы и отклики
-
-- [ ] Создание заказа (клиент) — **НЕ РЕАЛИЗОВАНО**
-- [ ] Лента заказов (просмотр) — **НЕ РЕАЛИЗОВАНО**
-- [ ] Отклик на заказ (эксперт) — **НЕ РЕАЛИЗОВАНО** (`get_verified_expert` готов, но роутера нет)
-- [ ] Принятие/отклонение отклика — **НЕ РЕАЛИЗОВАНО**
-
-### Кошелёк и платежи
-
-- [ ] Внутренний баланс эксперта — **поле `experts.balance` в БД есть, API НЕТ**
-- [ ] Пополнение баланса — **НЕ РЕАЛИЗОВАНО**
-- [ ] История транзакций — **НЕ РЕАЛИЗОВАНО** (таблица `transactions` есть)
-- [ ] Списание средств за отклик — **НЕ РЕАЛИЗОВАНО** (задумано в `schema.sql`, кода нет)
-
-### Дополнительный функционал
-
-- [ ] Чат между клиентом и экспертом — **НЕ РЕАЛИЗОВАНО**
-- [ ] Генератор договоров (PDF) — **НЕ РЕАЛИЗОВАНО** (таблица `contracts` есть)
-- [ ] Уведомления (email/SMS) — **НЕ РЕАЛИЗОВАНО** (заглушка `print` в `fns_api.py`)
-- [ ] Рейтинги и отзывы — **НЕ РЕАЛИЗОВАНО** (поле `experts.rating` есть, логики нет)
-
----
-
-## 3. Тестовые данные
-
-### Тестовые аккаунты
-
-Скрипт `backend/test_data.py` создаёт:
-
-| Аккаунт | Email | Пароль | Роль | Верификация | В БД |
-|---------|-------|--------|------|-------------|------|
-| Администратор | `admin@dompro.ru` | `Admin12345` | `admin` | `verified` | Да (1 из 3 users) |
-| Эксперт (пустой профиль) | `expert1@dompro.ru` | `Expert12345` | `expert` | `unverified` | Да |
-| Эксперт (профиль заполнен) | `expert2@dompro.ru` | `Expert12345` | `expert` | `unverified` | Да |
-| Верифицированный эксперт | — | — | — | — | **НЕТ** |
-| Клиент | — | — | — | — | **НЕТ** |
-
-### Тестовые данные в БД
-
-- [ ] Заказы — **0 записей**
-- [ ] Отклики — **0 записей**
-- [ ] Транзакции — **0 записей**
-- [ ] Заявки на верификацию — **0 записей**
-
-### Тесты
-
-- [x] `tests/test_auth.py` — 1 тест (register + login + me), **проходит** при `PYTHONPATH=.`
-
----
-
-## 4. Инфраструктура
-
-### База данных
-
-- [x] Supabase подключен — `DATABASE_URL` → `aws-0-eu-west-1.pooler.supabase.com`
-- [x] Таблицы созданы — 8 таблиц в `public`
-- [x] Миграции применены — `002_auth_verification.sql` выполнена пользователем в Supabase SQL Editor
+- **Отклик эксперта** — списание `response_fee` с кошелька атомарно, запись транзакции.
+- **Принятие отклика** — остальные отклики по заказу отклоняются, статус заказа обновляется.
+- **Верификация** — загрузка документов в локальное хранилище, модерация админом.
+- **Клиенты эксперта** — агрегация по принятым (`ACCEPTED`) откликам: имя, компания, число заказов, последняя активность.
 
 ### Хранилище файлов
 
-- [x] Переменные Supabase в `.env` — `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_STORAGE_BUCKET` заданы
-- [ ] Bucket `verifications` — **не проверялся автоматически**; при отсутствии bucket загрузка упадёт (есть fallback `local://` без Supabase-клиента)
+```
+core/storage/
+├── base.py          # протокол StorageBackend
+├── local.py         # LocalFilesystemStorage (текущий режим)
+└── disk_monitor.py  # предупреждение о нехватке места на диске
+```
 
-### Переменные окружения
-
-- [x] `.env` файл — **существует** в корне проекта
-- [x] Все необходимые переменные:
-
-| Переменная | Статус |
-|------------|--------|
-| `DATABASE_URL` | OK |
-| `SECRET_KEY` | OK |
-| `SUPABASE_URL` | OK |
-| `SUPABASE_KEY` | OK |
-| `SUPABASE_STORAGE_BUCKET` | OK |
-
-### Сервер
-
-- [x] FastAPI запускается — `uvicorn main:app --reload`
-- [x] Swagger UI — http://127.0.0.1:8000/docs (13 эндпоинтов)
-- [x] Health check — `GET /health` → `database: connected`
+`STORAGE_BACKEND=s3` зарезервирован под Yandex/VK Object Storage (пока `NotImplementedError`).
 
 ---
 
-## 5. Что НЕ реализовано (список задач)
+## 3. Database (PostgreSQL на AdminVPS)
 
-### Критично для MVP
+### Таблицы
 
-- [ ] API заказов (создание клиентом, лента для экспертов)
-- [ ] API откликов (создание, принятие/отклонение, списание `response_fee`)
-- [ ] Регистрация и профиль клиента
-- [ ] Подключение фронтенда к API (формы auth, профиль, верификация)
-- [ ] Верифицированный тестовый эксперт для проверки откликов
-- [ ] Bucket Supabase Storage `verifications`
-- [ ] Закоммитить backend в git
+`users`, `experts`, `clients`, `orders`, `responses`, `transactions`, `expert_verifications`, `contracts` (модель есть, API/workflow — нет).
 
-### Важно, но не срочно
+### Данные на 07.07.2026 (после миграции + тестов)
 
-- [ ] Реальная проверка ИНН через DaData / API ФНС (сейчас заглушка)
-- [ ] Email/Telegram уведомления админу о новых заявках
-- [ ] Пополнение баланса (хотя бы заглушка deposit)
-- [ ] Каталог экспертов (публичный список verified)
-- [ ] Тесты для verification, profile, admin
-- [ ] `pytest.ini` / conftest: исправить `PYTHONPATH` для тестов
+| Таблица | Записей |
+|---|---|
+| `users` | 119 |
+| `experts` | 60 |
+| `orders` | 59 |
+| `expert_verifications` | 2 |
 
-### В будущем
+Подключение: `157.22.231.226:5432`, SSL (`sslmode=require`).
 
-- [ ] Генерация PDF-договоров
-- [ ] Чат клиент ↔ эксперт
-- [ ] Рейтинги и отзывы
-- [ ] Платёжная интеграция (реальное пополнение баланса)
-- [ ] React/Vue SPA вместо статического лендинга
-- [ ] CI/CD, Docker, деплой
+### Миграции
+
+- `database/schema.sql` — базовая схема, ENUM-типы, индексы
+- `002_auth_verification.sql` — поля авторизации и верификации
+- `003_order_deadline.sql` — дедлайн заказа
 
 ---
 
-## Приложение: вывод `audit_script.py`
+## 4. Frontend
 
-```
-Models: Client, Contract, Expert, Order, Response, Transaction, User, ExpertVerification
-Schemas: 21 класс (см. раздел 1)
-API: 13 эндпоинтов (см. раздел 1)
-DB: 8 таблиц, users=3, experts=2, orders=0, expert_verifications=0
-.env: все 5 переменных OK
-```
+### Страницы (`frontend/`)
 
-Запуск повторного аудита:
+| Страница | Назначение |
+|---|---|
+| `login.html` | Вход |
+| `register-expert.html` / `register-client.html` | Регистрация |
+| `expert-dashboard.html` / `client-dashboard.html` | Кабинеты |
+| `orders.html` / `order-detail.html` | Список и детали заказов |
+| `workspace.html` | **Expert Workspace** — рабочая оболочка эксперта |
+
+### JS-модули
+
+- `js/api.js` — HTTP-клиент к `http://127.0.0.1:8000/api/v1`
+- `js/auth.js`, `js/common.js` — токен, ошибки, форматирование
+- `js/pages/*` — логика каждого экрана
+
+### Expert Workspace (Фаза 1a)
+
+`workspace.html` + `workspace.js` — сайдбар с разделами:
+
+| Раздел | Статус |
+|---|---|
+| Лента | Заглушка (план: подборка заказов, рекомендации) |
+| **Мои клиенты** | **Работает** — данные из `/api/v1/expert/clients` |
+| Договоры | Заглушка |
+| Друзья | Заглушка |
+| Блоги | Заглушка |
+| Законодательство | Заглушка |
+
+Это первый осознанный шаг от «маркетплейса заказов» к **рабочему пространству эксперта**.
+
+### Старый лендинг
+
+Корневой `index.html`, `css/`, `js/app.js`, `assets/` — маркетинговый прототип, сохранён параллельно с `frontend/`.
+
+---
+
+## 5. Функциональность: детальный статус
+
+### Полностью реализовано
+
+- Регистрация и логин эксперта и клиента, эндпоинт `/auth/me`
+- JWT, роли, защита эндпоинтов
+- Профиль эксперта: чтение и обновление
+- Верификация: загрузка документов, просмотр статуса, админ approve/reject
+- Заказы: создание, список (с фильтрами по роли), детали, смена статуса, дедлайн
+- Отклики: создание (с комиссией), просмотр для клиента, accept/reject, история эксперта
+- Кошелёк: баланс, история транзакций
+- Expert Workspace: раздел «Мои клиенты» с API и UI
+- Локальное файловое хранилище + admin download
+- Миграция БД и данных на AdminVPS (РФ)
+- Health-check API + БД
+
+### Частично / с ограничениями
+
+- **Пополнение кошелька** — заглушка без эквайринга (ЮKassa/Тинькофф и т.п.)
+- **Проверка ИНН** (`services/fns_api.py`) — заглушка
+- **Уведомления** админу о заявках — без production-канала (email/Telegram)
+- **Workspace** — только «Мои клиенты»; остальные разделы — placeholder
+- **Деплой** — API и фронт только локально; на VPS пока только PostgreSQL
+- **Supabase** — проект ещё не отключён (ждём ~1 неделю стабильной работы на AdminVPS)
+
+### Не реализовано (но заложено в видении)
+
+- Чат клиент ↔ эксперт
+- Договорный контур: генерация PDF, подпись, хранение (`contracts` — только модель)
+- Рейтинги и отзывы
+- Реальные платежи и вывод средств
+- Object storage (S3-совместимый) вместо локальной ФС на сервере
+- Production: nginx, systemd, HTTPS, CI/CD, Docker
+- Секции Workspace: друзья, блоги, законодательство, полноценная лента
+
+---
+
+## 6. Тесты и качество
+
+### Интеграционные тесты (`backend/tests/`)
+
+| Файл | Что проверяет |
+|---|---|
+| `test_auth.py` | Регистрация, логин, `/me` |
+| `test_orders.py` | Создание заказов, видимость для ролей |
+| `test_responses.py` | Отклики, верификация, accept/reject |
+| `test_wallet.py` | Баланс, списание комиссии, пополнение |
+
+Тесты работают **против реальной БД AdminVPS** (не in-memory SQLite).  
+Последний прогон: **8 passed, 3 failed** (~3 мин) — часть тестов чувствительна к состоянию данных в общей dev-БД.
+
+### Риски
+
+- Нет изоляции тестовых данных (общая dev-БД) → возможны flaky-failures
+- Нет e2e-тестов фронтенда
+- Нет CI pipeline
+
+---
+
+## 7. Приоритеты на следующий спринт
+
+Упорядочено с учётом идеи «рабочая платформа, а не доска заказов»:
+
+1. **Завершить ручную проверку** полного цикла: регистрация → верификация с файлом → заказ → отклик → accept → Workspace «Мои клиенты».
+2. **Стабилизировать тесты** — фикстуры с изолированными данными или отдельная test-БД.
+3. **Workspace: лента заказов** — реальные данные вместо заглушки в разделе «Лента».
+4. **Договоры (минимум)** — API + UI в Workspace, связка с принятым заказом.
+5. **Платежи** — вынести `topup` в провайдерный слой (sandbox).
+6. **Деплой на VPS** — nginx + uvicorn + статика, чтобы не зависеть от двух локальных терминалов.
+7. **Документация** — обновить `backend/README.md` (убрать упоминания Supabase).
+
+---
+
+## Приложение: контрольный запуск аудита
 
 ```powershell
 cd C:\projects\dompro\backend
-.\.venv\Scripts\Activate.ps1
-python audit_script.py
+.\.venv\Scripts\python.exe audit_script.py
 ```
+
+Ключевой результат последнего запуска (07.07.2026):
+
+- backend-файлы, модели (8), схемы (34), роутеры (9) — обнаружены
+- `.env` обязательный набор: OK (`DATABASE_URL`, `SECRET_KEY`, `STORAGE_BACKEND`, `LOCAL_STORAGE_PATH`, `API_PUBLIC_URL`)
+- БД: **OK** (`157.22.231.226:5432`, AdminVPS, PostgreSQL 16)
+- Таблицы: `clients`, `contracts`, `expert_verifications`, `experts`, `orders`, `responses`, `transactions`, `users`
+- Счётчики: `users=119`, `experts=60`, `orders=59`, `expert_verifications=2`
+
+```powershell
+cd C:\projects\dompro\backend
+.\.venv\Scripts\python.exe -m pytest tests/ -v
+```
+
+---
+
+## Разработчик
+
+Максимов Игорь Юрьевич

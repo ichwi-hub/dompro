@@ -3,8 +3,9 @@
  */
 
 import { getToken, removeToken, saveUser } from './auth.js';
-
-const API_BASE = 'http://127.0.0.1:8000/api/v1';
+  window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+    ? 'http://127.0.0.1:8000/api/v1'
+    : '/api/v1';
 
 /**
  * Базовый запрос к API с обработкой ошибок.
@@ -193,4 +194,52 @@ export async function getExpertClients() {
 
 export async function getExpertClientDetail(clientId) {
   return request(`/expert/clients/${clientId}`);
+}
+
+// --- Expert feed ---
+
+export async function getExpertFeed() {
+  const data = await request('/expert/feed');
+  return data.items || [];
+}
+
+// --- Contracts ---
+
+export async function getExpertContracts() {
+  const data = await request('/expert/contracts');
+  return data.items || [];
+}
+
+export async function createOrderContract(orderId) {
+  return request(`/orders/${orderId}/contract`, { method: 'POST' });
+}
+
+export async function getOrderContract(orderId) {
+  return request(`/orders/${orderId}/contract`);
+}
+
+export async function downloadContract(contractId) {
+  const token = getToken();
+  const response = await fetch(`${API_BASE}/contracts/${contractId}/download`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    let message = `Ошибка ${response.status}`;
+    try {
+      const data = await response.json();
+      message = data.detail || message;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message);
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `contract_${contractId}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Договор оказания услуг</title>
+  <style>
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 12pt; line-height: 1.5; color: #111; margin: 40px; }
+    h1 { font-size: 16pt; text-align: center; margin-bottom: 24px; }
+    p { margin: 8px 0; }
+    .section { margin-top: 16px; }
+    .signatures { margin-top: 48px; display: table; width: 100%; }
+    .sign-block { display: table-cell; width: 50%; vertical-align: top; }
+  </style>
+</head>
+<body>
+  <h1>Договор оказания консультационных услуг</h1>
+
+  <p>г. Москва &nbsp;&nbsp;&nbsp; «{{ date }}»</p>
+
+  <div class="section">
+    <p>
+      <strong>Исполнитель:</strong> {{ expert_name }}, действующий как самозанятый специалист
+      на платформе DomPro.
+    </p>
+    <p>
+      <strong>Заказчик:</strong> {{ client_name }}.
+    </p>
+    <p>совместно именуемые «Стороны», заключили настоящий договор о нижеследующем:</p>
+  </div>
+
+  <div class="section">
+    <p><strong>1. Предмет договора</strong></p>
+    <p>Исполнитель обязуется оказать Заказчику услуги по запросу:</p>
+    <p><em>{{ order_description }}</em></p>
+  </div>
+
+  <div class="section">
+    <p><strong>2. Стоимость и порядок оплаты</strong></p>
+    <p>Стоимость услуг составляет <strong>{{ price }} ₽</strong>.</p>
+    <p>Оплата производится Заказчиком напрямую Исполнителю вне платформы DomPro,
+       если иное не согласовано Сторонами.</p>
+  </div>
+
+  <div class="section">
+    <p><strong>3. Сроки</strong></p>
+    <p>Срок выполнения работ: <strong>{{ deadline }}</strong>.</p>
+  </div>
+
+  <div class="section">
+    <p><strong>4. Прочие условия</strong></p>
+    <p>Договор сформирован автоматически на платформе DomPro и является проектом
+       для согласования Сторонами. Подписание в электронном виде возможно
+       в следующих версиях платформы.</p>
+  </div>
+
+  <div class="signatures">
+    <div class="sign-block">
+      <p>Исполнитель: _______________</p>
+      <p>{{ expert_name }}</p>
+    </div>
+    <div class="sign-block">
+      <p>Заказчик: _______________</p>
+      <p>{{ client_name }}</p>
+    </div>
+  </div>
+</body>
+</html>

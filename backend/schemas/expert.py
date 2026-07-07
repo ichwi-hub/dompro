@@ -13,6 +13,7 @@ class ExpertProfileUpdate(BaseModel):
     experience_years: int = Field(ge=0, le=60)
     specialization: str = Field(min_length=2, max_length=255)
     description: str = Field(min_length=10)
+    education: str | None = None
     photo_url: str | None = None
 
 
@@ -27,6 +28,7 @@ class ExpertProfileResponse(BaseModel):
     photo_url: str | None
     experience_years: int
     specialization: str | None
+    education: str | None
     description: str | None
     rating: Decimal
     balance: Decimal

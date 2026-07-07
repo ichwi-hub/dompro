@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,8 +10,11 @@ import models  # noqa: F401 — регистрация ORM-моделей
 from api.v1 import (
     admin,
     auth,
+    contracts,
     expert_clients,
+    expert_feed,
     expert_profile,
+    files,
     orders,
     responses,
     verification,
@@ -18,6 +22,9 @@ from api.v1 import (
 )
 from core.config import settings
 from core.database import get_db
+from core.storage.disk_monitor import warn_if_low_disk
+
+logger = logging.getLogger(__name__)
 
 API_V1_PREFIX = "/api/v1"
 
@@ -25,6 +32,14 @@ API_V1_PREFIX = "/api/v1"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Жизненный цикл приложения."""
+    if settings.STORAGE_BACKEND.lower() == "local":
+        storage_root = settings.local_storage_root
+        storage_root.mkdir(parents=True, exist_ok=True)
+        report = warn_if_low_disk(
+            storage_root,
+            min_free_gb=settings.STORAGE_MIN_FREE_GB,
+        )
+        logger.info("Storage disk: %s", report)
     yield
 
 
@@ -51,6 +66,9 @@ app.include_router(wallet.router, prefix=f"{API_V1_PREFIX}/wallet")
 app.include_router(orders.router, prefix=f"{API_V1_PREFIX}/orders")
 app.include_router(responses.router, prefix=API_V1_PREFIX)
 app.include_router(expert_clients.router, prefix=API_V1_PREFIX)
+app.include_router(expert_feed.router, prefix=API_V1_PREFIX)
+app.include_router(contracts.router, prefix=API_V1_PREFIX)
+app.include_router(files.router, prefix=API_V1_PREFIX)
 
 
 @app.get("/")

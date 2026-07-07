@@ -4,8 +4,7 @@ from pathlib import Path
 
 from fastapi import HTTPException, UploadFile, status
 
-from core.config import settings
-from core.supabase_client import get_supabase_client
+from core.storage import get_storage_backend
 
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 ALLOWED_MIME_TYPES = {
@@ -51,29 +50,18 @@ async def upload_verification_file(
     expert_id: int,
     file_type: str,
 ) -> str:
-    """Загрузка файла верификации в Supabase Storage."""
+    """Загрузка файла верификации через настроенный StorageBackend."""
     content = await validate_file(file)
     ext = Path(file.filename or "file").suffix.lower() or ".pdf"
-    object_path = f"{expert_id}/{file_type}_{uuid.uuid4().hex}{ext}"
+    object_key = f"verifications/{expert_id}/{file_type}_{uuid.uuid4().hex}{ext}"
 
-    client = get_supabase_client()
-    if client is None:
-        # Локальная заглушка без Supabase — для разработки
-        return f"local://verifications/{object_path}"
-
-    bucket = settings.SUPABASE_STORAGE_BUCKET
     mime = file.content_type or mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
+    backend = get_storage_backend()
 
     try:
-        client.storage.from_(bucket).upload(
-            path=object_path,
-            file=content,
-            file_options={"content-type": mime, "upsert": "true"},
-        )
-        public = client.storage.from_(bucket).get_public_url(object_path)
-        return public
+        return await backend.save(object_key, content, mime)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка загрузки файла в Storage: {exc}",
+            detail=f"Ошибка загрузки файла: {exc}",
         ) from exc

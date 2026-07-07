@@ -20,14 +20,17 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/dompro"
+    TEST_DATABASE_URL: str | None = None
 
     SECRET_KEY: str = "change-me-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
-    SUPABASE_STORAGE_BUCKET: str = "verifications"
+    # Хранилище файлов: local (ФС) | s3 (будущее object storage)
+    STORAGE_BACKEND: str = "local"
+    LOCAL_STORAGE_PATH: str = "./data/storage"
+    API_PUBLIC_URL: str = "http://127.0.0.1:8000"
+    STORAGE_MIN_FREE_GB: float = 2.0
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
@@ -38,6 +41,18 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000",
         "null",
     ]
+
+    @property
+    def local_storage_root(self) -> Path:
+        p = Path(self.LOCAL_STORAGE_PATH)
+        if not p.is_absolute():
+            p = PROJECT_ROOT / p
+        return p
+
+    def file_public_url(self, key: str) -> str:
+        base = self.API_PUBLIC_URL.rstrip("/")
+        safe = key.replace("\\", "/").lstrip("/")
+        return f"{base}/api/v1/files/{safe}"
 
     @property
     def database_url_sync(self) -> str:

@@ -1,12 +1,21 @@
 # DomPro Backend
 
-API маркетплейса экспертов на **FastAPI** + **PostgreSQL** + **SQLAlchemy**.
+API маркетплейса экспертов на **FastAPI** + **PostgreSQL (AdminVPS)** + **SQLAlchemy**.
+
+## Архитектура
+
+| Компонент | Описание |
+|-----------|----------|
+| **FastAPI** | REST API (`/api/v1/*`) |
+| **PostgreSQL 16** | БД на VPS `157.22.231.226` (SSL, 152-ФЗ) |
+| **Локальное хранилище** | Файлы верификации и PDF-договоры в `data/storage/` |
+| **Frontend** | Статический `frontend/` (отдельный HTTP-сервер или nginx) |
 
 ## Требования
 
 - Python 3.11+
-- PostgreSQL 14+
-- Применённая схема: `../database/schema.sql`
+- PostgreSQL 14+ (удалённый AdminVPS или локальный)
+- Применённая схема: `../database/schema.sql` + миграции в `../database/migrations/`
 
 ## Установка
 
@@ -19,75 +28,102 @@ pip install -r requirements.txt
 
 ## Переменные окружения
 
-Скопируйте `.env.example` в корень проекта (`C:\projects\dompro\.env`).
-
-### Supabase (рекомендуется)
-
-В [Supabase Dashboard](https://supabase.com/dashboard/project/mgsaonfuqqbvpzqctjww/settings/database) возьмите **Connection pooling** → **Transaction mode** (порт `6543`).
-
-Формат URL:
+Скопируйте `.env.example` в корень проекта (`C:\projects\dompro\.env`):
 
 ```env
-DATABASE_URL=postgresql://postgres.PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://dompro:PASSWORD@157.22.231.226:5432/dompro?sslmode=require
+TEST_DATABASE_URL=postgresql://dompro:PASSWORD@157.22.231.226:5432/dompro_test?sslmode=require
+SECRET_KEY=your-secret-key
+STORAGE_BACKEND=local
+LOCAL_STORAGE_PATH=./data/storage
+API_PUBLIC_URL=http://127.0.0.1:8000
 ```
 
-Для проекта DomPro регион: `eu-west-1`.
+### AdminVPS PostgreSQL
 
-Прямое подключение `db.*.supabase.co:5432` на Windows часто не работает (таймаут IPv6). Используйте pooler.
-
-Применить схему БД:
+1. PostgreSQL 16 на Ubuntu 24.04 (`backend/scripts/adminvps/setup_postgres.sh`)
+2. SSL (`sslmode=require`), доступ к порту 5432 только с IP разработчика (UFW)
+3. Применить схему и миграции:
 
 ```powershell
 cd C:\projects\dompro\backend
-.\.venv\Scripts\Activate.ps1
-python scripts\apply_schema.py
+.\.venv\Scripts\python.exe scripts\apply_schema.py
+.\.venv\Scripts\python.exe scripts\apply_migrations.py
 ```
 
-Таблицы также можно проверить в [Database → Schemas](https://supabase.com/dashboard/project/mgsaonfuqqbvpzqctjww/database/schemas).
+## Локальная разработка
 
-### Локальный PostgreSQL
-
-```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/dompro
-```
+Нужны **два терминала**:
 
 ```powershell
-psql -U postgres -d dompro -f ..\database\schema.sql
+# Терминал 1 — API
+cd C:\projects\dompro\backend
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+
+# Терминал 2 — фронтенд
+cd C:\projects\dompro
+python -m http.server 5500 --bind 127.0.0.1
 ```
 
-## Запуск сервера
+Точка входа: http://127.0.0.1:5500/frontend/login.html
+
+## Деплой на VPS
+
+Инфраструктурные файлы в `deploy/`:
+
+| Файл | Назначение |
+|------|------------|
+| `deploy/dompro-api.service` | systemd unit для uvicorn |
+| `deploy/nginx/dompro` | nginx: статика + proxy `/api/` |
+| `deploy/deploy.sh` | копирование, venv, restart |
+| `deploy/UFW.md` | правила файрвола и certbot |
+
+```bash
+# На VPS (после клонирования репозитория в /opt/dompro)
+sudo bash /opt/dompro/deploy/deploy.sh
+```
+
+Certbot (после настройки DNS):
+
+```bash
+sudo certbot --nginx -d dompro.ru -d www.dompro.ru
+```
+
+## Тесты
+
+Изолированная тестовая БД `dompro_test`:
 
 ```powershell
 cd C:\projects\dompro\backend
-.\.venv\Scripts\Activate.ps1
-uvicorn main:app --reload
+.\.venv\Scripts\python.exe scripts\setup_test_db.py
+.\.venv\Scripts\python.exe -m pytest tests/ -v
 ```
 
-## Проверка
+## Проверка API
 
 | URL | Описание |
 |-----|----------|
-| http://localhost:8000 | Статус сервиса |
-| http://localhost:8000/health | Проверка БД |
-| http://localhost:8000/api/v1/test | Тест API v1 |
-| http://localhost:8000/docs | Swagger UI |
+| http://127.0.0.1:8000/health | Проверка БД |
+| http://127.0.0.1:8000/docs | Swagger UI |
 
 ## Структура
 
 ```
 backend/
-├── main.py              # Точка входа FastAPI
-├── requirements.txt
-├── core/
-│   ├── config.py        # Настройки из .env (pydantic-settings)
-│   └── database.py      # Async SQLAlchemy
-├── models/              # ORM-модели
-└── schemas/             # Pydantic-схемы валидации
+├── main.py
+├── api/v1/           # Роутеры (auth, orders, contracts, feed, …)
+├── core/             # config, database, storage, security
+├── models/           # SQLAlchemy ORM
+├── schemas/          # Pydantic
+├── services/         # contract_service, storage, fns_api
+├── templates/        # HTML-шаблоны договоров
+├── scripts/          # миграции, setup_test_db, adminvps
+└── tests/            # интеграционные pytest-тесты
 ```
 
-## Механика оплаты (без эскроу)
+## Механика оплаты
 
-1. Эксперт пополняет **внутренний баланс** (`experts.balance`).
-2. При отклике списывается **response_fee** (таблица `transactions`).
-3. Оплата услуги — **напрямую** между клиентом и экспертом.
-4. Платформа генерирует **PDF-договор** (`contracts`).
+1. Эксперт пополняет внутренний баланс (`experts.balance`)
+2. При отклике списывается `response_fee` (150 ₽)
+3. Оплата услуги — напрямую между клиентом и экспертом
+4. Платформа генерирует PDF-договор (`contracts`)
